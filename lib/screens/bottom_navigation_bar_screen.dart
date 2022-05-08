@@ -1,8 +1,9 @@
 import 'package:diary/screens/entries_screen.dart';
+import 'package:diary/screens/favourites_screen.dart';
 import 'package:diary/screens/home_screen.dart';
+
 import 'package:diary/widgets/app_drawer.dart';
-import 'package:diary/widgets/entries_screen_appbar.dart';
-import 'package:diary/widgets/home_screen_appbar.dart';
+
 import 'package:flutter/material.dart';
 
 class bottomNavigationBarScreen extends StatefulWidget {
@@ -22,8 +23,12 @@ class _bottomNavigationBarScreenState extends State<bottomNavigationBarScreen> {
   @override
   void initState() {
     _pages = [
-      {'page': HomeScreen(), 'AppBar': HomeScreenAppBar()},
-      {'page': EntryScreen(), 'AppBar': EntriesScreenAppBar()}
+      {
+        'page': HomeScreen(),
+      },
+      {
+        'page': EntryScreen(),
+      },
     ];
     super.initState();
   }
@@ -37,16 +42,6 @@ class _bottomNavigationBarScreenState extends State<bottomNavigationBarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: Drawer(
-        backgroundColor: const Color.fromRGBO(250, 214, 165, 1),
-        child: AppDrawer(),
-      ),
-      backgroundColor: const Color.fromRGBO(250, 214, 165, 1),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: const Color.fromRGBO(252, 156, 84, 1),
-        title: _pages[_selectedIndex]['AppBar'],
-      ),
       body: _pages[_selectedIndex]['page'],
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: const Color.fromRGBO(116, 58, 52, 1),

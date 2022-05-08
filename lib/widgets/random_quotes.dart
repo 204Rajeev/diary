@@ -36,7 +36,10 @@ class RandomQuotes extends StatelessWidget {
     '"You may be disappointed if you fail, but you are doomed if you don\'t try." -Beverly Sills',
     '"How wonderful it is that nobody need wait a single moment before starting to improve the world." -Anne Frank',
     ' "The only person you are destined to become is the person you decide to be." -Ralph Waldo Emerson',
-    '“Your time is limited, so don’t waste it living someone else’s life. Don’t be trapped by dogma – which is living with the results of other people’\s thinking.” – Steve Jobs'
+    '“Your time is limited, so don’t waste it living someone else’s life. Don’t be trapped by dogma – which is living with the results of other people’\s thinking.” – Steve Jobs',
+    '“Be yourself; everyone else is already taken.” -Oscar Wilde',
+    '“Be who you are and say what you feel, because those who mind don\'t matter, and those who matter don\'t mind.”― Bernard M. Baruch',
+    '“Live as if you were to die tomorrow. Learn as if you were to live forever.”― Mahatma Gandhi'
   ];
   int randomQuoteSelector() {
     Random random = Random();
