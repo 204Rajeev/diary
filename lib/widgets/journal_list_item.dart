@@ -13,6 +13,7 @@ class JournalListItem extends StatelessWidget {
     required this.description,
     required this.favStatus,
     required this.imageUrl,
+    required this.id,
   }) : super(key: key);
 
   final DateTime date;
@@ -20,6 +21,7 @@ class JournalListItem extends StatelessWidget {
   final String description;
   bool favStatus;
   final String imageUrl;
+  final String id;
 
   int showFirst2WordsLength() {
     int spaceCount = 0, i;
@@ -134,9 +136,11 @@ class JournalListItem extends StatelessWidget {
                                 actions: [
                                   TextButton(
                                       onPressed: () {
-                                        journal.deleteEntry(date.toString());
+                                        journal.deleteEntry(id);
                                         const snackBar = SnackBar(
                                           content: Text('Entry deleted!'),
+                                          duration: Duration(
+                                              seconds: 1, milliseconds: 500),
                                         );
 
                                         ScaffoldMessenger.of(context)

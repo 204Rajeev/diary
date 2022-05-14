@@ -27,7 +27,7 @@ class FavouritesScreen extends StatelessWidget {
             body: const Center(
                 child: Text(
               'Add Your Favourite entries',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.normal),
             )),
           )
         : Scaffold(
@@ -51,6 +51,7 @@ class FavouritesScreen extends StatelessWidget {
                               journalList.favEntries[index].description,
                           favStatus: journalList.favEntries[index].isFavorite,
                           imageUrl: journalList.favEntries[index].imageUrl,
+                          id: journalList.favEntries[index].id,
                         )
                       ],
                     )),

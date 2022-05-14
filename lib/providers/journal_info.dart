@@ -1,25 +1,69 @@
+//import 'dart:_http';
+
 import 'package:diary/models/diary_entry.dart';
 import 'package:flutter/material.dart';
-
+import 'package:http/http.dart' as http;
 import '../screens/home_screen.dart';
+import 'dart:convert';
 
 class JournalInfo with ChangeNotifier {
-  final List<DiaryEntry> _entries = [];
-  final List<DiaryEntry> _favEntries = [];
+  List<DiaryEntry> _entries = [];
 
   List<DiaryEntry> get entries {
     return _entries;
   }
 
   List<DiaryEntry> get favEntries {
-    return _favEntries;
+    return _entries.where((entryItem) => entryItem.isFavorite).toList();
   }
 
-  void addEntry(String id, String description, String imageUrl, String mood,
+  Future<void> fetchEntries() async {
+    final url = Uri.https(
+        'mydiary-9f49b-default-rtdb.asia-southeast1.firebasedatabase.app',
+        '/Entries.json');
+
+    try {
+      final response = await http.get(url);
+      final extractedData = json.decode(response.body) as Map<String, dynamic>;
+
+      List<DiaryEntry> loadedEntries = [];
+      extractedData.forEach((entryId, entryData) {
+        loadedEntries.add(DiaryEntry(
+            entryId,
+            entryData['mood'],
+            entryData['description'],
+            entryData['imageUrl'],
+            entryData['isFavourite'],
+            DateTime.parse(entryData['title'])));
+      });
+      _entries = loadedEntries;
+      notifyListeners();
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  Future<void> addEntry(String description, String imageUrl, String mood,
       bool favStatus, DateTime date) {
-    _entries.add(DiaryEntry(id, mood, description, imageUrl, favStatus, date));
-    addFavEntry(id);
-    notifyListeners();
+    final url = Uri.https(
+        'mydiary-9f49b-default-rtdb.asia-southeast1.firebasedatabase.app',
+        '/Entries.json');
+    return http
+        .post(url,
+            body: jsonEncode({
+              'title': date.toString(),
+              'description': description,
+              'imageUrl': imageUrl,
+              'mood': mood,
+              'isFavourite': favStatus,
+            }))
+        .then((response) {
+      _entries.add(DiaryEntry(jsonDecode(response.body)['name'], mood,
+          description, imageUrl, favStatus, date));
+
+      notifyListeners();
+      return Future.value();
+    });
   }
 
   displayImage() {
@@ -30,59 +74,61 @@ class JournalInfo with ChangeNotifier {
     return moodStatus;
   }
 
-  void addFavEntry(String id) {
-    for (int i = 0; i < _entries.length; i++) {
-      if (_entries[i].isFavorite == true &&
-          _favEntries.contains(_entries[i]) == false) {
-        _favEntries.add(_entries[i]);
-      }
-    }
-    notifyListeners();
-  }
-
-  bool favouriteStatus = false;
-
-  void toggleFavourite(BuildContext ctx, String id) {
-    favouriteStatus = !favouriteStatus;
-    if (favouriteStatus == true) {
-      const snackBar = SnackBar(
-        content: Text('Added to favorites!'),
-      );
-
-      ScaffoldMessenger.of(ctx).showSnackBar(snackBar);
-    }
-    addFavEntry(id);
-    notifyListeners();
-  }
-
-  void deleteEntry(
+  Future<void> deleteEntry(
     String entryId,
-  ) {
-    int c = 0;
+  ) async {
     for (int i = 0; i < _entries.length; i++) {
       if (_entries[i].id == entryId) {
+        var existingEntry = _entries[i];
+        final url = Uri.https(
+            'mydiary-9f49b-default-rtdb.asia-southeast1.firebasedatabase.app',
+            '/Entries/$entryId.json');
         _entries.removeAt(i);
-        c = 1;
+        notifyListeners();
+        try {
+          final response = await http.delete(url);
+          if (response.statusCode >= 400) {
+            _entries.insert(i, existingEntry);
+            notifyListeners();
+          } else {
+            const snackBar = SnackBar(
+              content: Text('Entry deleted!'),
+              duration: Duration(seconds: 1, milliseconds: 500),
+            );
+          }
+        } catch (error) {
+          throw error;
+        }
       }
     }
-    if (c == 0) {
-      return;
-    }
+
     notifyListeners();
   }
 
-  void toggleFromEntrieScreen(String id) {
-    int c = 0;
+  Future<void> toggleFromEntrieScreen(String title, BuildContext ctx) async {
     for (int i = 0; i < _entries.length; i++) {
-      if (_entries[i].id == id) {
+      if (_entries[i].date.toString() == title) {
         _entries[i].isFavorite = !_entries[i].isFavorite;
-        c = 1;
+        notifyListeners();
+        final url = Uri.https(
+            'mydiary-9f49b-default-rtdb.asia-southeast1.firebasedatabase.app',
+            '/Entries/${entries[i].id}.json');
+        await http.patch(url,
+            body: json.encode({
+              'isFavourite': _entries[i].isFavorite,
+            }));
+        notifyListeners();
+        if (_entries[i].isFavorite == true) {
+          const snackBar = SnackBar(
+            content: Text('Added to favorites!'),
+            duration: Duration(seconds: 1, milliseconds: 500),
+          );
+
+          ScaffoldMessenger.of(ctx).showSnackBar(snackBar);
+        }
       }
     }
-    if (c == 0) {
-      return;
-    }
-    addFavEntry(id);
+
     notifyListeners();
   }
 }

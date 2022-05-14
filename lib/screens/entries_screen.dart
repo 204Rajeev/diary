@@ -5,14 +5,32 @@ import 'package:provider/provider.dart';
 import '../providers/journal_info.dart';
 import '../widgets/app_drawer.dart';
 
-class EntryScreen extends StatelessWidget {
-  const EntryScreen({Key? key}) : super(key: key);
+class EntryScreen extends StatefulWidget {
+  EntryScreen({Key? key}) : super(key: key);
 
   static const String routeName = '/entryScreen';
 
+  var isLoading = false;
+
+  @override
+  State<EntryScreen> createState() => _EntryScreenState();
+}
+
+class _EntryScreenState extends State<EntryScreen> {
+  var _isInit = true;
+
+  @override
+  void didChangeDependencies() {
+    if (_isInit) {
+      Provider.of<JournalInfo>(context).fetchEntries();
+    }
+    _isInit = false;
+    super.didChangeDependencies();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final journalList = Provider.of<JournalInfo>(context);
+    final journalList = Provider.of<JournalInfo>(context, listen: false);
     return journalList.entries.isEmpty
         // ignore: prefer_const_constructors
         ? Scaffold(
@@ -34,7 +52,7 @@ class EntryScreen extends StatelessWidget {
             body: const Center(
                 child: Text(
               'Add Your entries',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 30, fontWeight: FontWeight.normal),
             )),
           )
         : Scaffold(
@@ -63,6 +81,7 @@ class EntryScreen extends StatelessWidget {
                           description: journalList.entries[index].description,
                           favStatus: journalList.entries[index].isFavorite,
                           imageUrl: journalList.entries[index].imageUrl,
+                          id: journalList.entries[index].id,
                         )
                       ],
                     )));

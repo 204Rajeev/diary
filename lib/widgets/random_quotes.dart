@@ -62,7 +62,7 @@ class RandomQuotes extends StatelessWidget {
             child: Text(
               Quotes[randomQuoteSelector()],
               style: const TextStyle(
-                fontWeight: FontWeight.w300,
+                fontWeight: FontWeight.w100,
                 fontSize: 20,
                 color: Color.fromRGBO(71, 28, 28, 1),
               ),
