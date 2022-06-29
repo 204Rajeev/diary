@@ -1,10 +1,13 @@
-//import 'dart:_http';
-
 import 'package:diary/models/diary_entry.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import '../screens/home_screen.dart';
 import 'dart:convert';
+import 'dart:async';
+import 'dart:io';
+import '../helpers/db_helper.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:path_provider/path_provider.dart';
 
 class JournalInfo with ChangeNotifier {
   List<DiaryEntry> _entries = [];
@@ -19,8 +22,7 @@ class JournalInfo with ChangeNotifier {
 
   Future<void> fetchEntries() async {
     final url = Uri.https(
-        'mydiary-9f49b-default-rtdb.asia-southeast1.firebasedatabase.app',
-        '/Entries.json');
+        'mydiary2-c828e-default-rtdb.firebaseio.com', '/Entries.json');
 
     try {
       final response = await http.get(url);
@@ -29,25 +31,37 @@ class JournalInfo with ChangeNotifier {
       List<DiaryEntry> loadedEntries = [];
       extractedData.forEach((entryId, entryData) {
         loadedEntries.add(DiaryEntry(
-            entryId,
-            entryData['mood'],
-            entryData['description'],
-            entryData['imageUrl'],
-            entryData['isFavourite'],
-            DateTime.parse(entryData['title'])));
+          entryId,
+          entryData['mood'],
+          entryData['description'],
+          entryData['imageUrl'],
+          entryData['isFavourite'],
+          DateTime.parse(entryData['title']),
+          entryData['deviceImagePath'],
+        ));
       });
       _entries = loadedEntries;
       notifyListeners();
     } catch (error) {
-      throw error;
+      rethrow;
     }
   }
 
+  // Future<File> getImageFileFromAssets(String path) async {
+  //   final byteData = await rootBundle.load('assets/$path');
+
+  //   final file = File('${(await getTemporaryDirectory()).path}/$path');
+  //   await file.writeAsBytes(byteData.buffer
+  //       .asUint8List(byteData.offsetInBytes, byteData.lengthInBytes));
+
+  //   return file;
+  // }
+
   Future<void> addEntry(String description, String imageUrl, String mood,
-      bool favStatus, DateTime date) {
+      bool favStatus, DateTime date, File pickedImage, bool didPickImage) {
+    if (didPickImage == false) {}
     final url = Uri.https(
-        'mydiary-9f49b-default-rtdb.asia-southeast1.firebasedatabase.app',
-        '/Entries.json');
+        'mydiary2-c828e-default-rtdb.firebaseio.com', '/Entries.json');
     return http
         .post(url,
             body: jsonEncode({
@@ -56,12 +70,14 @@ class JournalInfo with ChangeNotifier {
               'imageUrl': imageUrl,
               'mood': mood,
               'isFavourite': favStatus,
+              'deviceImagePath': pickedImage.path
             }))
         .then((response) {
       _entries.add(DiaryEntry(jsonDecode(response.body)['name'], mood,
-          description, imageUrl, favStatus, date));
+          description, imageUrl, favStatus, date, pickedImage.path));
 
       notifyListeners();
+      //DBHelper.insert('entry', {'id':});
       return Future.value();
     });
   }
@@ -80,8 +96,7 @@ class JournalInfo with ChangeNotifier {
     for (int i = 0; i < _entries.length; i++) {
       if (_entries[i].id == entryId) {
         var existingEntry = _entries[i];
-        final url = Uri.https(
-            'mydiary-9f49b-default-rtdb.asia-southeast1.firebasedatabase.app',
+        final url = Uri.https('mydiary2-c828e-default-rtdb.firebaseio.com',
             '/Entries/$entryId.json');
         _entries.removeAt(i);
         notifyListeners();
@@ -110,8 +125,7 @@ class JournalInfo with ChangeNotifier {
       if (_entries[i].date.toString() == title) {
         _entries[i].isFavorite = !_entries[i].isFavorite;
         notifyListeners();
-        final url = Uri.https(
-            'mydiary-9f49b-default-rtdb.asia-southeast1.firebasedatabase.app',
+        final url = Uri.https('mydiary2-c828e-default-rtdb.firebaseio.com',
             '/Entries/${entries[i].id}.json');
         await http.patch(url,
             body: json.encode({

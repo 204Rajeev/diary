@@ -52,6 +52,7 @@ class FavouritesScreen extends StatelessWidget {
                           favStatus: journalList.favEntries[index].isFavorite,
                           imageUrl: journalList.favEntries[index].imageUrl,
                           id: journalList.favEntries[index].id,
+                          imagePath_: journalList.entries[index].deviceImagePath,
                         )
                       ],
                     )),

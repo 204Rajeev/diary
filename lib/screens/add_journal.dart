@@ -1,10 +1,11 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:intl/intl.dart';
-
+import 'dart:io';
 import '../providers/journal_info.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as path;
+import 'package:path_provider/path_provider.dart' as syspaths;
 
 class AddJournal extends StatefulWidget {
   static const routeName = '/AddJournal';
@@ -19,6 +20,25 @@ class _AddJournalState extends State<AddJournal> {
   final journalEntry = TextEditingController();
   final now = DateTime.now();
   var isLoading = false;
+  late PickedFile _deviceImage;
+  late File savedImage;
+  bool tookpictures = false;
+
+  Future<void> _takepictures() async {
+    final imageFile = await ImagePicker().getImage(source: ImageSource.camera);
+
+    if (imageFile == null) {
+      return; 
+    }
+    setState(() {
+      _deviceImage = imageFile;
+      tookpictures = true;
+    });
+    final appDir = await syspaths.getApplicationDocumentsDirectory();
+    final fileName = path.basename(imageFile.path);
+
+    savedImage = await File(imageFile.path).copy('${appDir.path}/$fileName');
+  }
 
   @override
   void dispose() {
@@ -58,7 +78,7 @@ class _AddJournalState extends State<AddJournal> {
           ? const Center(
               child: CircularProgressIndicator(
               valueColor: AlwaysStoppedAnimation<Color>(
-                Color.fromRGBO(71, 28, 28, 1), //<-- SEE HERE
+                Color.fromRGBO(71, 28, 28, 1),
               ),
             ))
           : SingleChildScrollView(
@@ -113,7 +133,7 @@ class _AddJournalState extends State<AddJournal> {
                                   size: 40,
                                 )
                               : const Icon(
-                                  Icons.favorite_border_outlined,
+                                  Icons.favorite_outlined,
                                   color: Color.fromRGBO(71, 28, 28, 1),
                                   size: 40,
                                 ),
@@ -147,9 +167,10 @@ class _AddJournalState extends State<AddJournal> {
                   Padding(
                     padding: const EdgeInsets.all(40),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         FloatingActionButton(
+                          heroTag: "btn1",
                           elevation: 0,
                           backgroundColor:
                               const Color.fromRGBO(252, 156, 84, 1),
@@ -160,11 +181,14 @@ class _AddJournalState extends State<AddJournal> {
 
                             info
                                 .addEntry(
-                                    journalEntry.text,
-                                    info.displayImage(),
-                                    info.displayMood(),
-                                    favouriteStatus,
-                                    now)
+                              journalEntry.text,
+                              info.displayImage(),
+                              info.displayMood(),
+                              favouriteStatus,
+                              now,
+                              savedImage,
+                              tookpictures,
+                            )
                                 .then((_) {
                               setState(() {
                                 isLoading = false;
@@ -178,9 +202,46 @@ class _AddJournalState extends State<AddJournal> {
                             color: Color.fromRGBO(250, 214, 165, 1),
                           ),
                         ),
+                        FloatingActionButton(
+                          heroTag: "btn2",
+                          elevation: 0,
+                          backgroundColor:
+                              const Color.fromRGBO(252, 156, 84, 1),
+                          onPressed: _takepictures,
+                          tooltip: 'Submit your journal',
+                          child: const Icon(
+                            Icons.camera_alt,
+                            color: Color.fromRGBO(250, 214, 165, 1),
+                          ),
+                        )
                       ],
                     ),
-                  )
+                  ),
+                  const Divider(
+                    thickness: 0.1,
+                    color: Color.fromRGBO(71, 28, 28, 1),
+                  ),
+                  tookpictures == false
+                      ? GestureDetector(
+                          onTap: _takepictures,
+                          child: Container(
+                            height: 200,
+                            width: double.infinity,
+                            padding: const EdgeInsets.fromLTRB(30, 5, 0, 5),
+                            child: Image.asset('assets/images/add.png',
+                                fit: BoxFit.fitHeight),
+                          ),
+                        )
+                      : Container(
+                          padding: EdgeInsets.all(20),
+                          height: 300,
+                          width: 300,
+                          child: Image.file(
+                            File(_deviceImage.path),
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                          ),
+                        )
                 ],
               ),
             ),
